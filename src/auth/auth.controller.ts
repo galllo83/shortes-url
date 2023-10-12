@@ -4,7 +4,9 @@ import * as bcrypt from 'bcrypt';
 import { AuthGuard } from '@nestjs/passport';
 import { SignUpDto } from '../users/dto/signup.dto';
 import { LogInDto } from '../users/dto/login.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -21,7 +23,7 @@ export class AuthController {
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Request() req) {
+  async login(@Request() req, @Body() loginUpDto: LogInDto) {
     return this.authService.login(req.user);
 }
 }
