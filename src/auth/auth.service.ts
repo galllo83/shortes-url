@@ -36,21 +36,17 @@ export class AuthService {
 
   async signup(signUpDto: SignUpDto): Promise<User> {
     const { username, password } = signUpDto;
-    
+
     return this.userModel.create({
       username,
       password,
     });
   }
 
-  async login(loginUpDto: LogInDto) {
-    const { username, password } = loginUpDto;
-    const user = await this.userModel.findOne({ username });
-
-    const payload = { userId: user._id };
-
-    const accessToken = this.jwtService.sign(payload);
-
-    return accessToken;
-  }
+  async login(user: any) {
+    const payload = { username: user.username, sub: user._id };
+    return {
+        access_token: this.jwtService.sign(payload),
+    };
+}
 }

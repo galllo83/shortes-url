@@ -7,24 +7,21 @@ import { LogInDto } from '../users/dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {}
 
-    @Post('signup')
-    async createUser(@Body() signUpDto: SignUpDto): Promise<{ message: string }> {
-        const { username, password } = signUpDto;
-        const saltOrRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltOrRounds);
-        const result = await this.authService.signup(signUpDto);
+  @Post('signup')
+  async createUser(@Body() signUpDto: SignUpDto): Promise<{ message: string }> {
+    const { username, password } = signUpDto;
+    const saltOrRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
+    const result = await this.authService.signup(signUpDto);
 
-        return { message: 'User registered successfully' };
-    }
+    return { message: 'User registered successfully' };
+  }
 
-    @UseGuards(AuthGuard('local'))
-    @Post('login')
-    async logIn(@Body() loginDto: LogInDto): Promise<{ message: string; token: string }> {
-        const { username, password } = loginDto;
-        const token = await this.authService.login(loginDto);
-        
-        return { message: 'Login successful', token };
-    }
+  @UseGuards(AuthGuard('local'))
+  @Post('login')
+  async login(@Request() req) {
+    return this.authService.login(req.user);
+}
 }
