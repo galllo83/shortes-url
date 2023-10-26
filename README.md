@@ -26,6 +26,13 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Requirements
+
+```bash
+1.- MongoDB
+2.- .env file with MONGO_URI
+```
+
 ## Installation
 
 ```bash
@@ -44,9 +51,5 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
-## Requirements
-
-1.- MongoDB
-2.- .env file with MONGO_URI
 
 Nest is [MIT licensed](LICENSE).
