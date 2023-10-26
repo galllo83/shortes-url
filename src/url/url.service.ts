@@ -1,32 +1,65 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Url, UrlDocument } from './schemas/url.schema';
-import { EncodeUrlDto } from './dto/encode-url.dto';
+import mongoose, { Model } from 'mongoose';
+import { Url } from './schemas/url.schema';
+import { CreateUrlDto } from './dto/create-url.dto';
+import { UrlDto } from './dto/url.dto';
 import { DecodeUrlDto } from './dto/decode-url.dto';
+import { EncodeUrlDto } from './dto/encode-url.dto copy';
 
 @Injectable()
 export class UrlService {
   constructor(
-    @InjectModel('url') private readonly urlModel: Model<UrlDocument>,
+    @InjectModel('url') private readonly urlModel: Model<Url>,
   ) {}
 
-  async encodeUrl(url: EncodeUrlDto): Promise<string> {
-    const base64Url = Buffer.from(url.url).toString('base64');
+  async encodeUrl(url: string): Promise<DecodeUrlDto> {
+    const existUrl = await this.findUrl(url);
+    
+    if(existUrl) return { shortUrl: existUrl.shortUrl };
 
-    const shortUrl = base64Url.substring(0, 6);
+    const shortUrl = await this.createShortUrl();
+    
+    const createUrl: Url = {
+      url: url,
+      shortUrl: shortUrl
+    }
 
-    return shortUrl;
+    const newUrl = await this.createUrl(createUrl);
+
+    return { shortUrl: newUrl.shortUrl };
   }
 
-  async decodeUrl(url: DecodeUrlDto): Promise<string> {
-    const paddedShortUrl = url.url.padEnd(
-      Math.ceil(url.url.length / 4) * 4,
-      '=',
-    );
+  async decodeUrl(shortUrl: string): Promise<EncodeUrlDto> {
+    const decodeUrl = await this.urlModel.findOne({ shortUrl: shortUrl });
 
-    const longUrl = Buffer.from(paddedShortUrl, 'base64').toString();
+    if(!decodeUrl) throw new NotFoundException('Short Url not found');
+    
+   return { url: decodeUrl.url };
+  }
 
-    return longUrl;
+  async createUrl(createUrl: CreateUrlDto): Promise<CreateUrlDto>{
+
+    return await this.urlModel.create(createUrl);
+  }
+
+  async createShortUrl(): Promise<string> {
+    
+    const shortUrl = (Math.random() + 1).toString(36).substring(6);
+    
+    const existShortUrl = await this.findShortUrl(shortUrl);
+
+    if(!existShortUrl) return shortUrl;
+    else await this.createShortUrl();
+  }
+
+  async findUrl(url: string): Promise<UrlDto> {
+    const existUrl = await this.urlModel.findOne({ url: url });
+
+    return existUrl;
+  }
+
+  async findShortUrl(shortUrl: string): Promise<Url>{
+    return await this.urlModel.findOne({ shortUrl: shortUrl });
   }
 }

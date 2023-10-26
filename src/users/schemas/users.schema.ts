@@ -5,8 +5,8 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop({ unique: [true, 'Duplicate username entered'] })
-  username: string;
+  @Prop({ unique: [true, 'Duplicate name entered'] })
+  name: string;
 
   @Prop()
   password: string;

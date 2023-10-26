@@ -3,10 +3,21 @@ import { Document } from 'mongoose';
 
 export type UrlDocument = Url & Document;
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Url {
-  @Prop()
+  @Prop({
+    unique: true,
+    required: true
+  })
   url: string;
+
+  @Prop({
+    unique: true,
+    required: true
+  })
+  shortUrl: string;
 }
 
 export const UrlSchema = SchemaFactory.createForClass(Url);

@@ -1,29 +1,34 @@
-import { Controller, Request, Post, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import * as bcrypt from 'bcrypt';
-import { AuthGuard } from '@nestjs/passport';
-import { SignUpDto } from '../users/dto/signup.dto';
-import { LogInDto } from '../users/dto/login.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { User } from './schemas/auth.schema';
+import { AuthGuard } from './auth.guard';
+import { LogInDto } from './dto/logIn.dto';
+import { SignUpDto } from './dto/signUp.dto';
 
-@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async createUser(@Body() signUpDto: SignUpDto): Promise<{ message: string }> {
-    const { username, password } = signUpDto;
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
-    const result = await this.authService.signup(signUpDto);
-
+  async registerUser(
+    @Body() signUpDto: SignUpDto,
+  ): Promise<{ message: string }> {
+    await this.authService.signUp(signUpDto);
     return { message: 'User registered successfully' };
   }
 
-  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Request() req, @Body() loginUpDto: LogInDto) {
-    return this.authService.login(req.user);
-}
+  async logIn(
+    @Body() loginDto: LogInDto,
+  ): Promise<{ message: string; token: string }> {
+    const { email, password } = loginDto;
+    const token = await this.authService.logIn(loginDto);
+    return { message: 'Login successful', token };
+  }
+
+  @Get('users')
+  @UseGuards(AuthGuard)
+  async getUsers(): Promise<User[]> {
+    return this.authService.getUsers();
+  }
 }

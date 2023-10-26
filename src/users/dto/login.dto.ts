@@ -5,10 +5,10 @@ export class LogInDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
-    example: 'username',
-    description: 'The username',
+    example: 'name',
+    description: 'The name',
   })
-  readonly username: string;
+  readonly name: string;
 
   @IsString()
   @IsNotEmpty()

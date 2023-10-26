@@ -1,21 +1,23 @@
-import { Module } from "@nestjs/common"
-import { UsersModule } from "../users/users.module";
-import { AuthService } from "./auth.service"
-import { PassportModule } from "@nestjs/passport"
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthController } from '../auth/auth.controller';
-import { UsersService } from "../users/users.service";
-import { MongooseModule } from "@nestjs/mongoose"
-import { UserSchema } from "../users/schemas/users.schema"
-import { LocalStrategy } from './local.strategy';
-
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UserSchema } from './schemas/auth.schema';
+import { secretKey } from './config';
 
 @Module({
-  imports: [UsersModule, PassportModule, JwtModule.register({
-    secret: 'secretKey',
-    signOptions: { expiresIn: '60s' },
-  }), MongooseModule.forFeature([{ name: "user", schema: UserSchema }])],
-  providers: [AuthService, UsersService, LocalStrategy],
+  imports: [
+    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    JwtModule.register({
+      secret: secretKey.secret,
+      signOptions: { expiresIn: '1h' },
+    }),
+  ],
   controllers: [AuthController],
+  providers: [AuthService],
+  exports: [AuthModule, JwtModule]
 })
-export class AuthModule { }
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {}
+}

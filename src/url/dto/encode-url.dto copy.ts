@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsUrl } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class EncodeUrlDto {
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
   readonly url: string;
 }

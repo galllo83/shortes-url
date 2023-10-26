@@ -1,52 +1,67 @@
 import {
   Injectable,
-  NotAcceptableException,
   NotFoundException,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { User, UserDocument } from '../users/schemas/users.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { LogInDto } from 'src/users/dto/login.dto';
-import { SignUpDto } from 'src/users/dto/signup.dto';
+import { User } from './schemas/auth.schema';
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { SignUpDto } from './dto/signUp.dto';
+import { LogInDto } from './dto/logIn.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
-    @InjectModel('user') private readonly userModel: Model<UserDocument>,
-    private readonly usersService: UsersService,
+    @InjectModel(User.name) private userModel: Model<User>,
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.usersService.getUser({ username });
+  async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
+    const { name, email, password } = signUpDto;
 
-    if (!user) return null;
+    const hash = await bcrypt.hash(password, 10);
 
-    const passwordValid = await bcrypt.compare(password, user.password);
-
-    if (!user) throw new NotAcceptableException('could not find the user');
-
-    if (user && passwordValid) return user;
-    return null;
-  }
-
-  async signup(signUpDto: SignUpDto): Promise<User> {
-    const { username, password } = signUpDto;
-
-    return this.userModel.create({
-      username,
-      password,
+    const user = await this.userModel.create({
+      name,
+      email,
+      password: hash,
     });
+
+    return { message: 'User registered successfully' };
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user._id };
-    return {
-        access_token: this.jwtService.sign(payload),
-    };
-}
+  async logIn(loginDto: LogInDto): Promise<string> {
+    const { email, password } = loginDto;
+
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordMatch)
+      throw new UnauthorizedException('Invalid login credentials');
+
+    const payload = { userId: user._id };
+
+    const token = this.jwtService.sign(payload);
+
+    return token;
+  }
+
+  async getUsers(): Promise<User[]> {
+    try {
+      const users = await this.userModel.find({});
+      return users;
+    } catch (error) {
+      this.logger.error(
+        `An error occurred while retrieving users: ${error.message}`,
+      );
+      throw new Error('An error occurred while retrieving users');
+    }
+  }
 }
