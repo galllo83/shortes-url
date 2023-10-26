@@ -10,22 +10,18 @@ import { DecodeUrlDto } from './dto/decode-url.dto';
 @Controller('url')
 export class UrlController {
   constructor(private urlService: UrlService) {}
-  
+
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('encode')
-  async encode(
-    @Body() body: EncodeUrlDto,
-  ): Promise<DecodeUrlDto> {
+  async encode(@Body() body: EncodeUrlDto): Promise<DecodeUrlDto> {
     return await this.urlService.encodeUrl(body.url);
   }
-  
+
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('decode')
-  async decode(
-    @Body() body: DecodeUrlDto,
-  ): Promise<EncodeUrlDto> {
+  async decode(@Body() body: DecodeUrlDto): Promise<EncodeUrlDto> {
     return await this.urlService.decodeUrl(body.shortUrl);
   }
 }
